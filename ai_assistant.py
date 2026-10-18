@@ -10,8 +10,13 @@ model_name = os.getenv("MODE")
 client = ollama.Client(host=ollama_host)
 print("Sending request to local model...")
 
-messages=  []
-
+messages = []
+messages.append( 
+    {
+        'role': 'system',
+        'content': "Always respond in 20 words or less. If you don't know the answer, say 'I don't know'."
+    }
+)
 
 while True:
     user_input = input("\nAbhishek:  ")
@@ -21,7 +26,7 @@ while True:
         break
     
     messages.append(
-        {
+        { 
             'role': 'user',
             'content': user_input
         }
