@@ -1,4 +1,3 @@
-import json
 import os 
 from dotenv import load_dotenv
 from tools import Tools,FUNCTION_NAME_TO_FUNCTION
@@ -23,7 +22,7 @@ messages.append(
 while True:
     user_input = input("\nAbhishek:  ")
     
-    if(user_input.lower() in ["exit", "quit"]):
+    if user_input.lower() in ["exit", "quit"]:
         print("Exiting...")
         break
     
@@ -34,22 +33,28 @@ while True:
         }
     )
     
-    
-    response = client.chat( #client.chat.completions.create
-        model=model_name,
-        messages=messages,
-        tools = Tools
-    )
-    msg = response.message
-    if msg.tool_calls:
+    # Chained tool-calling loop (handles 1 or multiple tool calls automatically)
+    while True:
+        response = client.chat(
+            model=model_name,
+            messages=messages,
+            tools=Tools
+        )
+        msg = response.message
+        
+        # If the model didn't request a tool, it's ready to give the final answer
+        if not msg.tool_calls:
+            break
+            
+        # 1. Append the assistant's tool-call request to history FIRST
         messages.append(msg)
+        
+        # 2. Execute each requested tool and append the results
         for tool_call in msg.tool_calls:
             func_name = tool_call.function.name
-            func_args = tool_call.function.arguments #json.loads(tool_call.function.arguments)
+            func_args = tool_call.function.arguments 
             
-            fn =  FUNCTION_NAME_TO_FUNCTION.get(func_name)
-            result = fn(**func_args)
-            
+            fn = FUNCTION_NAME_TO_FUNCTION.get(func_name)
             if fn:
                 result = fn(**func_args)
             else:
@@ -61,23 +66,18 @@ while True:
                     'content': str(result)
                 }
             )   
-            
-        #2nd call to LLM API
-        response = client.chat( #client.chat.completions.create
-            model=model_name,
-            messages=messages,
-        )
-        
-        msg = response.message
-    
+        # The loop automatically repeats: sends the tool output back to the model 
+        # so it can either call the next tool or write the final response.
+
     messages.append(
         {
-            "role" : 'assistant',
-            "content" : msg.content
+            "role": 'assistant',
+            "content": msg.content
         }
     )
-    print("Assistant: "+ msg.content)
+    print("Assistant: " + msg.content)
 
+   
 
     # messages.append(
     #     {
