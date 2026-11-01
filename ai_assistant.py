@@ -47,19 +47,25 @@ while True:
             break
             
         # 1. Append the assistant's tool-call request to history FIRST
-        messages.append(msg)
+        messages.append(msg) 
+        print(f"Model requested {len(msg.tool_calls)} tool call(s)")
         
-        # 2. Execute each requested tool and append the results
+        # 2. Execute each requested tool with error handling
         for tool_call in msg.tool_calls:
-            func_name = tool_call.function.name
+            func_name = tool_call.function.name 
             func_args = tool_call.function.arguments 
             
-            fn = FUNCTION_NAME_TO_FUNCTION.get(func_name)
-            if fn:
-                result = fn(**func_args)
-            else:
-                result = f"Function {func_name} not found"
+            try:
+                print(f" -> Running {func_name}({func_args})")
+                fn = FUNCTION_NAME_TO_FUNCTION.get(func_name)
+                if fn:
+                    result = fn(**func_args)
+                else:
+                    result = f"Function {func_name} not found"
+            except Exception as e:
+                result = f"Error while running {func_name} : {e}"
             
+            print(f"    ↳ Output: {result}")
             messages.append(
                 {
                     'role': 'tool',
@@ -75,7 +81,8 @@ while True:
             "content": msg.content
         }
     )
-    print("Assistant: " + msg.content)
+    print("Assistant: " + (msg.content or "" )) # if msg.content is None, print empty string to avoid TypeError.
+    
 
    
 

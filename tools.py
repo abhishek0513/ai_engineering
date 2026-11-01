@@ -7,6 +7,7 @@ def get_current_time():
 def get_city_weather(city): 
     url = f"https://wttr.in/{city}?format=3" #format string
     response = requests.get(url, timeout=10)
+    response.raise_for_status()  # Raise an exception for HTTP errors
     return response.text
 
 def get_user_city():
@@ -36,7 +37,8 @@ Tools = [
                             {"type" : "string", 
                                   "description" : "The city to get the weather for"
                                 }
-                    }, 
+                    },
+                    "required" : ["city"]
                 }
             }
         },
