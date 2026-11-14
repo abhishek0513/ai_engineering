@@ -82,9 +82,10 @@ def test_similarity_search(user_query, documents, top_k=3):
         
 # Let's start testing
 documents = load_documents_from_folder()
-documents = add_embeddings_to_documents(documents)
+print(documents[0])
+# documents = add_embeddings_to_documents(documents)
 
-print(f"We embedded {len(documents)} documents")
+# print(f"We embedded {len(documents)} documents")
 
-user_query = "How many round of assesment are there ?"
-test_similarity_search(user_query, documents, top_k=3)
+# user_query = "How many round of assesment are there ?"
+# test_similarity_search(user_query, documents, top_k=3)
