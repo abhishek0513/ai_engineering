@@ -1,5 +1,6 @@
 from datetime import datetime
 import requests
+from rag import search
 def get_current_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -12,6 +13,20 @@ def get_city_weather(city):
 
 def get_user_city():
     return "Banglore"
+
+
+def search_knowledge_base(query):
+    result = search(query, top_k=2)
+    blocks = []
+    for res in result:
+        sourcefileName = res["source"]
+        chunkId = res.get("chunk_id", 0)  # Safe fallback if missing
+        chunkText = res["text"]
+        header = f"Source: {sourcefileName}, Chunk ID: {chunkId}\n"
+        block = f"{header}\n{chunkText}"
+        blocks.append(block)
+        
+    return "\n\n".join(blocks)
 
 #Tools = [{}, {}, {}]
 Tools = [
@@ -55,12 +70,28 @@ Tools = [
                     }, 
                 }
             }
-        }
+        },
+    {
+        "type" : "function", 
+            "function" : {
+                "name" : "search_knowledge_base",
+                "description" : "Search the knowledge base for relevant information like leave policy, travel policy, HR policy, company policy, company information, company details, company rules, company regulations, company guidelines, company procedures, company processes, company standards, company practices, company protocols, company instructions, company directives, company mandates, company requirements, company obligations, company responsibilities, company duties, company commitments, company expectations of Zorvex technologies, and return the most relevant information from the knowledge base. Use this tool when asked about company policies, procedures, guidelines, rules, regulations, standards, practices, protocols, instructions, directives, mandates, requirements, obligations, responsibilities, duties, commitments, or expectations of Zorvex technologies.",
+                "parameters" : {"type" : "object","properties" : {
+                        "query" : 
+                            {"type" : "string", 
+                                  "description" : "The query to search the knowledge base for"
+                                }
+                    },
+                    "required" : ["query"]
+                }
+            }
+    }
 ]
 
 
 FUNCTION_NAME_TO_FUNCTION = {
     "get_current_time" : get_current_time,
     "get_city_weather" : get_city_weather,
-    "get_user_city" : get_user_city
+    "get_user_city" : get_user_city,
+    "search_knowledge_base" : search_knowledge_base
 }
